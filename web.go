@@ -17,6 +17,8 @@ func download(url string) bool {
 	if fileName == "" {
 		fileName = "noname"
 	}
+	fileName = strings.Replace(fileName, "?", "", -1)
+	fileName = strings.Replace(fileName, "#", "", -1)
 	out, _ := os.Create("./download/" + fileName)
 	defer out.Close()
 	statusCode, body, err := fasthttp.Get(nil, url)
@@ -227,6 +229,7 @@ func main() {
 		log.Println("mkDir ./download")
 	}
 	bind := fmt.Sprintf("%s:%s", os.Getenv("OPENSHIFT_GO_IP"), os.Getenv("OPENSHIFT_GO_PORT"))
+//	bind := fmt.Sprintf("%s:%s", "0.0.0.0", "8081")
 	log.Printf("listening on %s...\n", bind)
 	if err := fasthttp.ListenAndServe(bind, m); err != nil {
 		log.Fatal(err)
