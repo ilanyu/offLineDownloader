@@ -17,8 +17,9 @@ func download(url string) bool {
 	if fileName == "" {
 		fileName = "noname"
 	}
-	fileName = strings.Replace(fileName, "?", "", -1)
-	fileName = strings.Replace(fileName, "#", "", -1)
+	fileName = strings.Replace(fileName, "?", "_", -1)
+	fileName = strings.Replace(fileName, "#", "_", -1)
+	fileName = strings.Replace(fileName, "&", "_", -1)
 	out, _ := os.Create("./download/" + fileName)
 	defer out.Close()
 	statusCode, body, err := fasthttp.Get(nil, url)
@@ -128,11 +129,11 @@ func main() {
     </style>
     <div class="am-footer-miscs">
         <p>友情链接 &nbsp;<a href="http://www.lanyus.com/" rel="friend" target="_blank">无心问世</a></p> &nbsp;
-        <p><a href="https://github.com/ilanyu/offline-download" target="_blank">关于</a></p>
+        <p><a href="https://github.com/ilanyu/offLineDownloader" target="_blank">关于</a></p>
         <p class="am-article-meta">
         </p><p><a href="#" target="_blank"><span class="am-icon-qq am-success" target="_blank"></span> 程序开发 无心问世</a></p>
         <br>
-        <p>© 2015 无心问世. copyright</p>
+        <p>© 2016 无心问世. copyright</p>
     </div>
 </footer>
 
