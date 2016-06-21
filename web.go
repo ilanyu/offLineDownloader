@@ -1,4 +1,5 @@
 package main
+
 import (
 	"github.com/valyala/fasthttp"
 	"log"
@@ -8,10 +9,14 @@ import (
 	"io/ioutil"
 	"strconv"
 	"time"
-"fmt"
+	"fmt"
+	"os/exec"
+	"runtime"
+	"flag"
 )
 
-func download(url string) bool {
+//从url中获取文件名
+func getFileName(url string) string {
 	fileNames := strings.Split(url, "/")
 	fileName := fileNames[len(fileNames) - 1]
 	if fileName == "" {
@@ -20,6 +25,12 @@ func download(url string) bool {
 	fileName = strings.Replace(fileName, "?", "_", -1)
 	fileName = strings.Replace(fileName, "#", "_", -1)
 	fileName = strings.Replace(fileName, "&", "_", -1)
+	return fileName
+}
+
+//使用fasthttp下载文件
+func download(url string) bool {
+	fileName := getFileName(url)
 	out, _ := os.Create("./download/" + fileName)
 	defer out.Close()
 	statusCode, body, err := fasthttp.Get(nil, url)
@@ -29,7 +40,22 @@ func download(url string) bool {
 	return true
 }
 
+//调用wget下载文件
+func downloadByWget(url string) bool {
+	cmd := exec.Command("wget", "-c", "-P", "download", url)
+	err := cmd.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = cmd.Wait()
+	log.Printf("Command finished with error: %v", err)
+	return true
+}
+
 func main() {
+	host := flag.String("host", "0.0.0.0", "host")
+	port := flag.String("port", "8081", "port")
+	flag.Parse()
 	m := func(ctx *fasthttp.RequestCtx) {
 		switch {
 		case string(ctx.Path()) == "/":
@@ -191,6 +217,7 @@ func main() {
 </html>
 `)
 		case string(ctx.Path()) == "/down":
+			//点击“下载”触发，下载远程文件
 			args := ctx.QueryArgs()
 			url := string(args.Peek("url"))
 			protocol := strings.Split(url, "://")
@@ -199,23 +226,30 @@ func main() {
 				log.Println(protocol)
 				return
 			}
-			go download(url)
+			//
+			if runtime.GOOS != "linux" {
+				go download(url)
+			} else {
+				go downloadByWget(url)
+			}
 			ctx.WriteString("success")
 			log.Println("visiter " + ctx.RemoteIP().String() + " use " + string(ctx.UserAgent()) + " downloaded " + url + " in " + time.Now().Format("2006-01-02 15:04:05"))
 		case string(ctx.Path()) == "/delete":
+			//删除文件
 			args := ctx.QueryArgs()
 			file := string(args.Peek("file"))
 			file = strings.Replace(file, "/", "", -1)
-			os.Remove("./download/" + file)
+			os.Remove("./download" + file)
 			ctx.WriteString("success")
 		case bytes.HasPrefix(ctx.Path(), []byte("/download/")):
-			fasthttp.FSHandler("./download/", 1)(ctx)
+			fasthttp.FSHandler("./download", 1)(ctx)
 		case string(ctx.Path()) == "/downlist":
-			dirList, _ := ioutil.ReadDir("./download/")
+			//生成文件列表
+			dirList, _ := ioutil.ReadDir("./download")
 			length := len(dirList)
 			ctx.WriteString("[")
 			for i := 0; i < length; i++ {
-				ctx.WriteString(`{"name":"` + dirList[i].Name() + `","mtime":"` + dirList[i].ModTime().Format("2006-01-02 15:04:05") + `","size":"` + strconv.FormatInt(dirList[i].Size(), 10) + ` B"}`)
+				ctx.WriteString(`{"name":"` + dirList[i].Name() + `","mtime":"` + dirList[i].ModTime().Format("2006-01-02 15:04:05") + `","size":"` + strconv.FormatInt(dirList[i].Size() / 1024 / 1024, 10) + ` MB"}`)
 				if i != length - 1 {
 					ctx.WriteString(",")
 				}
@@ -227,10 +261,11 @@ func main() {
 	}
 	if fileInfo, err := os.Stat("./download"); err != nil || !fileInfo.IsDir() {
 		os.Mkdir("./download", 0755)
-		log.Println("mkDir ./download")
+		log.Println("mkDir dirctionary")
 	}
-	bind := fmt.Sprintf("%s:%s", os.Getenv("OPENSHIFT_GO_IP"), os.Getenv("OPENSHIFT_GO_PORT"))
-//	bind := fmt.Sprintf("%s:%s", "0.0.0.0", "8081")
+	//bind := fmt.Sprintf("%s:%s", os.Getenv("OPENSHIFT_GO_IP"), os.Getenv("OPENSHIFT_GO_PORT"))
+	bind := fmt.Sprintf("%s:%s", *host, *port)
+	log.Printf("run on %s...\n", runtime.GOOS)
 	log.Printf("listening on %s...\n", bind)
 	if err := fasthttp.ListenAndServe(bind, m); err != nil {
 		log.Fatal(err)
