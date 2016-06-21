@@ -42,7 +42,8 @@ func download(url string) bool {
 
 //调用wget下载文件
 func downloadByWget(url string) bool {
-	cmd := exec.Command("wget", "-c", "-P", "download", url)
+	fileName := getFileName(url)
+	cmd := exec.Command("wget", "-c", "-O", "./download/" + fileName, url)
 	err := cmd.Start()
 	if err != nil {
 		log.Fatal(err)
@@ -239,7 +240,7 @@ func main() {
 			args := ctx.QueryArgs()
 			file := string(args.Peek("file"))
 			file = strings.Replace(file, "/", "", -1)
-			os.Remove("./download" + file)
+			os.Remove("./download/" + file)
 			ctx.WriteString("success")
 		case bytes.HasPrefix(ctx.Path(), []byte("/download/")):
 			fasthttp.FSHandler("./download", 1)(ctx)
