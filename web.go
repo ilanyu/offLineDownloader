@@ -176,15 +176,15 @@ func main() {
 </div>
 
 <!--[if lt IE 9]>
-<script src="//libs.useso.com/js/jquery/1.11.1/jquery.min.js"></script>
+<script src="http://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
 <script src="//cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
 <script src="/js/polyfill/rem.min.js"></script>
-<script src="//libs.useso.com/js/respond.js/1.4.2/respond.min.js"></script>
+<script src="http://libs.baidu.com/respond.js/1.4.2/respond.min.js"></script>
 <script src="//cdn.amazeui.org/amazeui/2.4.2/js/amazeui.legacy.min.js"></script>
 <![endif]-->
 
 <!--[if (gte IE 9)|!(IE)]><!-->
-<script src="//libs.useso.com/js/jquery/2.1.1/jquery.min.js"></script>
+<script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
 <script src="//cdn.amazeui.org/amazeui/2.4.2/js/amazeui.min.js"></script>
 <!--<![endif]-->
 <script>
